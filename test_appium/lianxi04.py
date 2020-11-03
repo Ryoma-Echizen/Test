@@ -1,37 +1,70 @@
-#雪球切换到交易，选择港美股开户，输入用手机、错误的验证码点击理解开户，切换为本地，返回
+# 雪球app切换到交易，选择港美股开户，输入手机、错误的验证码点击立即开户，返回
+# MuMU模拟器6.0测试通过
+from time import sleep
+
 from appium import webdriver
 from appium.webdriver.common.mobileby import MobileBy
 from appium.webdriver.common.touch_action import TouchAction
 from selenium.webdriver.common.by import By
-from selenium.webdriver.remote.mobile import Mobile
+from selenium.webdriver.support import expected_conditions
+from selenium.webdriver.support.wait import WebDriverWait
 
 
 class TestLianxi04:
     def setup(self):
-        caps={}
-        caps['platformName']='android'
-        caps['devicesName']='192.168.56.105:5555'
+        caps = {}
+        caps['platformName'] = 'android'
+        caps['devicesName'] = '127.0.0.1:7555'
         caps['appPackage'] = 'com.xueqiu.android'
         caps['appActivity'] = '.view.WelcomeActivityAlias'
-        caps['noReset']=True
-        caps['skipServerInstallation']=True
+        caps['noReset'] = True
+        caps['skipServerInstallation'] = True
 
-        self.driver = webdriver.Remote("http://localhost:4723/wd/hub",caps)
+        self.driver = webdriver.Remote("http://localhost:4723/wd/hub", caps)
         self.driver.implicitly_wait(30)
 
-    def test_lianxi04(self):
-        self.driver.find_element(By.XPATH,'//*[text="交易" and contains(@resource-id,"tab")]').click()
-        self.driver.find_element(By.XPATH,'//*[text="港美" and contains(@resource-id,"title")]').click()
-        # TouchAction(self.driver).tap(x=986, y=2292).perform()
-        # TouchAction(self.driver).tap(x=335, y=165).perform()
-        self.driver.find_element(By.XPATH,'//*[text="登录/注册"]').click()
-        print(self.driver.contexts)
-        self.driver.find_element(MobileBy.ACCESSIBILITY_ID,'tv_login_by_phone_or_others').click()
-        phone = (MobileBy.ACCESSIBILITY_ID, 'register_phone_number')
-        # self.driver.find_element(*phone).click()
-        self.driver.find_element(*phone).send_keys('15316036798')
-        code = (MobileBy.ACCESSIBILITY_ID, 'register_code')
-        # self.driver.find_element(*code).click()
-        self.driver.find_element(*code).send_keys('15316036798')
-        print(self.driver.contexts)
+    def test_lianxi04_native(self):
+        #方法1-模拟器mumu测试通过
+        self.driver.find_element(By.XPATH, "//*[@text='交易' and contains(@resource-id, 'tab')]").click()
+        self.driver.find_element(MobileBy.ACCESSIBILITY_ID, '港美股开户').click()
+        # 滑动
+        self.test_scroll()
+        phone = (By.XPATH, '//android.webkit.WebView[@content-desc="雪盈证券"]/android.view.View[2]')
+        self.driver.find_element(*phone).click()
+        phone_list = [8, 12, 10, 8, 13, 7, 10, 13, 14, 16, 15]
+        # 输入手机号15316036798
+        for i in phone_list:
+            self.driver.press_keycode(i)
+        code = (By.XPATH, '//android.webkit.WebView[@content-desc="雪盈证券"]/android.view.View[3]')
+        self.driver.find_element(*code).click()
+        code_list = [8, 9, 10, 115]
+        # 输入验证码1234
+        for i in code_list:
+            self.driver.press_keycode(i)
+        self.driver.find_element(MobileBy.ACCESSIBILITY_ID, '立即开户').click()
+        self.driver.find_element(By.ID, 'action_bar_close').click()
 
+    def test_lianxi04_context(self):
+        self.driver.find_element(By.XPATH, "//*[@text='交易' and contains(@resource-id, 'tab')]").click()
+        self.driver.switch_to.context(self.driver.contexts[-1])
+        self.driver.find_element(MobileBy.ACCESSIBILITY_ID, '港美股开户').click()
+
+        # self.driver.find_element(By.CSS_SELECTOR,'.trade_home_xueying_SJY').click()
+        WebDriverWait(self.driver,30).until(lambda x : len(self.driver.window_handles) > 3)
+        self.test_scroll()
+        WebDriverWait(self.driver,30).until(expected_conditions.element_to_be_clickable((By.CSS_SELECTOR,'[placeholder="请输入手机号"]')))
+        self.driver.find_element(By.CSS_SELECTOR,'[placeholder="请输入手机号"]').send_keys('15316036798')
+        self.driver.find_element(By.CSS_SELECTOR,'[placeholder="请输入验证码"]').send_keys('1234')
+        self.driver.switch_to.context(self.driver.contexts[0])
+        self.driver.find_element(By.ID,'action_bar_back').click()
+
+
+
+    # 滚动TouchAction
+    def test_scroll(self):
+        size = self.driver.get_window_size()
+        for i in range(3):
+            TouchAction(self.driver).long_press(x=size['width'] * 0.5, y=size['height'] * 0.8) \
+                .move_to(x=size['width'] * 0.5, y=size['height'] * 0.2) \
+                .release() \
+                .perform()
