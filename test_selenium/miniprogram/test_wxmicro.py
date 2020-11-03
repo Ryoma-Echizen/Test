@@ -15,6 +15,7 @@ class TestWXmicro:
 
         caps = {}
         caps["platformName"] = "android"
+        # caps["deviceName"] = "192.168.56.104:5555"
         caps["deviceName"] = "192.168.2.7:1212"
         caps["appPackage"] = "com.tencent.mm"
         caps["appActivity"] = "com.tencent.mm.ui.LauncherUI"

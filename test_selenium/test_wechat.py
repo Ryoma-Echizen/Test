@@ -16,13 +16,14 @@ class Test_003():
         self.driver = webdriver.Chrome(options=chromeOptions)
 
     def test_add(self):
-        WebDriverWait(self.driver,10).until(self.wait_element)
-        self.driver.find_element(By.CSS_SELECTOR,'.js_has_member div:nth-child(1) .js_add_member').click()
-        time.sleep(1)
-        self.driver.find_element(By.ID,'username').send_keys('test1')
-        self.driver.find_element(By.ID,'memberAdd_acctid').send_keys('test1')
-        self.driver.find_element(By.ID,'memberAdd_phone').send_keys('11111111112')
-        self.driver.find_element(By.CSS_SELECTOR,'.js_btn_save').click()
+        self.driver.get("https://work.weixin.qq.com/wework_admin/frame#index")
+        # WebDriverWait(self.driver,10).until(self.wait_element)
+        # self.driver.find_element(By.CSS_SELECTOR,'.js_has_member div:nth-child(1) .js_add_member').click()
+        # time.sleep(1)
+        # self.driver.find_element(By.ID,'username').send_keys('test1')
+        # self.driver.find_element(By.ID,'memberAdd_acctid').send_keys('test1')
+        # self.driver.find_element(By.ID,'memberAdd_phone').send_keys('11111111112')
+        # self.driver.find_element(By.CSS_SELECTOR,'.js_btn_save').click()
 
     def teardown(self):
         self.driver.quit()

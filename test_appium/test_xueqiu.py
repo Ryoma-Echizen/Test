@@ -1,6 +1,5 @@
 import json
 import time
-
 from appium import webdriver
 from appium.webdriver.common.mobileby import MobileBy
 from appium.webdriver.common.touch_action import TouchAction
@@ -13,13 +12,14 @@ from selenium.webdriver.support.wait import WebDriverWait
 class TestXueqiu:
     def setup(self):
         caps = {}
-        caps['platformName'] = 'android'
-        caps['deviceName'] = '192.168.2.7:1212'
+        caps['platformName'] = 'Android'
+        caps['deviceName'] = '127.0.0.1:7555'
         # caps['deviceName'] = '2KE0219B09101306'
+        caps['platformVersion'] = '6.0.1'
         caps['appPackage'] = 'com.xueqiu.android'
         caps['appActivity'] = '.view.WelcomeActivityAlias'
         caps['noReset'] = True
-        caps['dontStopAppOnReset'] = True
+        # caps['dontStopAppOnReset'] = True
         # caps['unicodeKeyboard'] = True
         # caps['resetKeyboard'] = True
         caps['skipServerInstallation'] = True
@@ -27,9 +27,9 @@ class TestXueqiu:
         # caps["chromedriverExecutable"] = "/Users/"
 
         self.driver = webdriver.Remote("http://localhost:4723/wd/hub", caps)
-        self.driver.implicitly_wait(10)
+        self.driver.implicitly_wait(30)
 
-    #查询
+    # 查询
     def test_search(self):
         # el1 = self.driver.find_element_by_id('com.xueqiu.android:id/tv_agree')
         # el1.click()
@@ -41,44 +41,44 @@ class TestXueqiu:
         self.driver.find_element(MobileBy.ID, 'home_search').click()
         self.driver.find_element(MobileBy.ID, 'search_input_text').send_keys('alibaba')
 
-    #搜索
+    # 搜索
     def test_search_and_get_price(self):
         # self.driver.find_element(MobileBy.ID, 'tv_agree').click()
         self.driver.find_element(MobileBy.ID, 'home_search').click()
         self.driver.find_element(MobileBy.ID, 'search_input_text').send_keys('alibaba')
         time.sleep(3)
         self.driver.find_element(MobileBy.ID, 'name').click()
-        assert float(self.driver.find_element(MobileBy.ID,'current_price').text) > 200
+        assert float(self.driver.find_element(MobileBy.ID, 'current_price').text) > 200
 
-    #滚动TouchAction
+    # 滚动TouchAction
     def test_scroll(self):
         size = self.driver.get_window_size()
         print(size)
         for i in range(10):
-            TouchAction(self.driver).long_press(x = size['width']*0.5,y = size['height']*0.8)\
-                .move_to(x = size['width']*0.5,y = size['height']*0.2)\
-                .release()\
+            TouchAction(self.driver).long_press(x=size['width'] * 0.5, y=size['height'] * 0.8) \
+                .move_to(x=size['width'] * 0.5, y=size['height'] * 0.2) \
+                .release() \
                 .perform()
 
     def test_devices(self):
-        #把应用放在后台5秒再激活
+        # 把应用放在后台5秒再激活
         self.driver.background_app(5)
-        #锁屏5秒
+        # 锁屏5秒
         self.driver.lock(5)
-        #解锁
+        # 解锁
         self.driver.unlock()
 
-    #获取香港阿里巴巴的股票价格并断言
+    # 获取香港阿里巴巴的股票价格并断言
     def test_search_and_get_price_hk(self):
         # self.driver.find_element(MobileBy.ID, 'tv_agree').click()
         self.driver.find_element(MobileBy.ID, 'home_search').click()
         self.driver.find_element(MobileBy.ID, 'search_input_text').send_keys('阿里巴巴')
         self.driver.find_element(MobileBy.ID, 'name').click()
-        #切到股票title
-        stock= (By.XPATH,"//*[contains(@resource-id,'title_container')]//*[@text='股票']")
+        # 切到股票title
+        stock = (By.XPATH, "//*[contains(@resource-id,'title_container')]//*[@text='股票']")
         self.driver.find_element(*stock).click()
-        #获取阿里巴巴香港股票价格
-        current_price =(By.XPATH,"//*[@text='09988']/../../..//*[contains(@resource-id,'current_price')]")
+        # 获取阿里巴巴香港股票价格
+        current_price = (By.XPATH, "//*[@text='09988']/../../..//*[contains(@resource-id,'current_price')]")
         print(float(self.driver.find_element(*current_price).text))
         assert float(self.driver.find_element(*current_price).text) > 200
         print(self.driver.find_element(*current_price).get_attribute("resourceId"))
@@ -88,18 +88,29 @@ class TestXueqiu:
 
     def test_webview_native(self):
         time.sleep(5)
-        self.driver.find_element(By.XPATH,"//*[@text='交易' and contains(@resource-id, 'tab')]").click()
+        self.driver.find_element(By.XPATH, "//*[@text='交易' and contains(@resource-id, 'tab')]").click()
         self.driver.find_element(MobileBy.ACCESSIBILITY_ID, "A股开户").click()
-        self.driver.find_element(By.XPATH, '//*[@text,"平安银行"]/..//*[@text="开户"]').click()
-        submit = (By.XPATH, '//*[@text,"开户领取"]')
+        # 平安银行-开户
+        pingan = (By.XPATH, '(//android.widget.Button[@content-desc="开户"])[1]')
+        WebDriverWait(self.driver, 30).until(expected_conditions.element_to_be_clickable(pingan))
+        self.driver.find_element(*pingan).click()
+        # 开户领取
+        # submit = (By.XPATH, '//android.view.View[@content-desc="开户领取"]')
+        submit = (MobileBy.ACCESSIBILITY_ID, '开户领取')
         WebDriverWait(self.driver, 30).until(expected_conditions.element_to_be_clickable(submit))
         self.driver.find_element(*submit).click()
-        phone = (MobileBy.ID,'phone-number')
-        # print(self.driver.page_source.text)
-        self.driver.find_element(*phone)
-        self.driver.find_element(*phone).send_keys('15316036798')
-        # phone = (MobileBy.XPATH, "//android.widget.EditText")
-        # self.driver.find_element(*phone)
+        time.sleep(5)
+        print(self.driver.contexts)
+        phone = (MobileBy.ACCESSIBILITY_ID, '输入11位手机号')
+        WebDriverWait(self.driver, 30).until(expected_conditions.element_to_be_clickable(phone))
+        self.driver.find_element(*phone).click()
+        # send_keys无效原因排查https://blog.csdn.net/lwdfzr/article/details/104017394
+        self.driver.activate_ime_engine(
+            'com.netease.nemu_vinput.nemu/com.android.inputmethodcommon.SoftKeyboard')  # 激活键盘
+        phone_list = [8, 12, 10, 8, 13, 7, 10, 13, 14, 16, 15]
+        # 输入手机号15316036798
+        for i in phone_list:
+            self.driver.press_keycode(i)
 
     def test_webview_context(self):
         self.driver.find_element(By.XPATH, "//*[@text='交易' and contains(@resource-id, 'tab')]").click()
@@ -145,9 +156,9 @@ class TestXueqiu:
         # WebDriverWait(self.driver, 60).until(expected_conditions.visibility_of_element_located(phone))
         # self.driver.find_element(*phone).send_keys("15600534760")
 
-    #底层方法滚动
+    # 底层方法滚动
     def test_uiselector(self):
-        #找到一个可滚动的控件UiScrollable调用一个可滚动的方法UiSelector.scrollable(true)滑倒到特定标志的文本UiSelector().text("WebView")
+        # 找到一个可滚动的控件UiScrollable调用一个可滚动的方法UiSelector.scrollable(true)滑倒到特定标志的文本UiSelector().text("WebView")
         scroll_to_elemment = (
             MobileBy.ANDROID_UIAUTOMATOR,
             'new UiScrollable('
@@ -158,10 +169,7 @@ class TestXueqiu:
         # self.driver.find_element(MobileBy.ANDROID_UIAUTOMATOR,"new UiScrollable(new UiSelector.scrollable(true).instance(0)).scrollIntoView(new UiSelector().text('一只花蛤').instance(0));").click()
 
     def teardown(self):
-        time.sleep(3)
-        self.driver.quit()
-
-
-
-
+        pass
+        # time.sleep(3)
+        # self.driver.quit()
 
